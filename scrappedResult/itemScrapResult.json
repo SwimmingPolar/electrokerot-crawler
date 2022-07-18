@@ -1,0 +1,43 @@
+{
+  "name": "some name",
+  "pcode": "some pcode",
+  "tag": "#1",
+  "registrationDate": "등록날짜",
+  "stock": true,
+  "details": {
+    "field name#1": {
+      "value": "some description",
+      "type": "basic"
+    },
+    "field name #2": {
+      "value": "some description",
+      "type": "basic"
+    }
+  },
+  "vendors": {
+    "marketType #1": [
+      {
+        "vendorName": "some vendor name",
+        "vendorCode": "some code",
+        "url": "some url",
+        "price": "12345"
+      }
+    ],
+    "marketType #2": [
+      {
+        "vendorName": "some vendor name",
+        "vendorCode": "some code",
+        "url": "some url",
+        "price": "12345"
+      }
+    ],
+    "marketType #1": [
+      {
+        "vendorName": "some vendor name",
+        "vendorCode": "some code",
+        "url": "some url",
+        "price": "12345"
+      }
+    ]
+  }
+}
