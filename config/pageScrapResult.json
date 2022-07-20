@@ -3,7 +3,7 @@
   "items": [
     {
       "name": "some name",
-      "itemList": [
+      "variantsList": [
         {
           "tag": "16gb",
           "pcode": "445",
@@ -25,7 +25,7 @@
     },
     {
       "name": "some name",
-      "itemList": [
+      "variantsList": [
         {
           "tag": "16gb",
           "pcode": "445",
@@ -42,7 +42,7 @@
     },
     {
       "name": "some name",
-      "itemList": [
+      "variantsList": [
         {
           "tag": "16gb",
           "pcode": "445",
