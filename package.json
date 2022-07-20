@@ -36,6 +36,7 @@
     "puppeteer": "^15.4.0",
     "puppeteer-extra": "^3.3.4",
     "puppeteer-extra-plugin-adblocker": "^2.13.4",
-    "puppeteer-extra-plugin-stealth": "^2.11.0"
+    "puppeteer-extra-plugin-stealth": "^2.11.0",
+    "zod": "^3.17.9"
   }
 }

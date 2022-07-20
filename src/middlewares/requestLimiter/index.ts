@@ -1,31 +1,24 @@
 import { Request, Response, NextFunction } from 'express'
 
-const { lockRequest, unlockRequest, isLocked } = (function () {
-  let lock = false
-  return {
-    lockRequest: () => (lock = true),
-    unlockRequest: () => (lock = false),
-    isLocked: () => lock
-  }
-})()
+const requestLimiter = (function () {
+  const LIMIT = 1
+  let currentRequest = 0
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (currentRequest >= LIMIT) {
+      res.json({
+        isBusy: true
+      })
+      return
+    }
+    currentRequest++
 
-// Crawler can only process single scrapping job at a time
-function requestLimiter(req: Request, res: Response, next: NextFunction) {
-  if (isLocked()) {
-    res.json({
-      isBusy: true
+    res.on('close', () => {
+      currentRequest--
     })
+
+    next()
     return
   }
-
-  // lock current crawler
-  lockRequest()
-
-  // unlock when scrapping is done
-  res.on('close', unlockRequest)
-
-  next()
-  return
-}
+})()
 
 export default requestLimiter

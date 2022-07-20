@@ -30,14 +30,10 @@ const log = {
     console.log(
       new Date().toISOString() +
         ' ' +
-        `[${yellowBright('ERROR')}]` +
+        `[${yellowBright(`ERROR: ${invoker}`)}]` +
         ': ' +
         redBright(error)
     )
-    // fs.appendFileSync(
-    //   `log/${invoker}-error-log.txt`,
-    //   new Date().toISOString() + ' - ' + error + '\n'
-    // )
     process.exit(1)
   }
 }

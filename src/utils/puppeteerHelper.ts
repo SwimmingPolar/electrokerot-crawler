@@ -14,25 +14,21 @@ export async function initiateBrowser() {
     browser = await puppeteer.launch({
       headless: false,
       defaultViewport: null,
-      executablePath: puppeteer.executablePath()
+      executablePath: puppeteer.executablePath(),
+      args: ['--disable-dev-shm-usage']
     })
-
-    page = (await browser.pages())[0]
   } catch (error) {
     log.error('puppeteerHelper', 'browser instantiating failure')
   }
 }
 
 export async function getBrowser() {
-  if (!browser || !page) {
+  if (!browser) {
     await initiateBrowser()
   }
   return browser
 }
 
 export async function getPage() {
-  if (!browser || !page) {
-    await initiateBrowser()
-  }
-  return page
+  return await (await getBrowser()).newPage()
 }

@@ -4,14 +4,14 @@ dotenv.config({
 })
 import express, { Request, Response } from 'express'
 
-import log from 'utils/logger'
 import { initiateBrowser } from 'utils/puppeteerHelper'
+import log from 'utils/logger'
 import requestLimiter from 'middlewares/requestLimiter'
+import bodyParser from 'middlewares/bodyParser'
 import api from './api'
 
-// ignore-prettier
 const app = express()
-
+app.use(bodyParser)
 ;(async () => {
   // initiate browser instance
   await initiateBrowser()
@@ -24,9 +24,9 @@ const app = express()
   // connect routes
   app.use('/', requestLimiter, api)
 
-  // disallow unknown requests
+  // disallow unknown request methods
   app.all('*', (req: Request, res: Response) => {
-    res.status(403).send()
+    res.status(403).send(`Forbidden: ${req.url}`)
   })
 
   // start crawler
