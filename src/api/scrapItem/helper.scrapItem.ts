@@ -27,7 +27,9 @@ interface ScrapItemResult {
   }[]
 }
 
-export default async function ({ url }: ScrapItemParams) {
+export default async function ({
+  url
+}: ScrapItemParams): Promise<ScrapItemResult> {
   /**
    * GET new page
    */
@@ -54,9 +56,10 @@ export default async function ({ url }: ScrapItemParams) {
             "div[id='2DepthCategory'] .now a"
           ) as HTMLAnchorElement
         )
-          .getAttribute('href')
+          ?.getAttribute('href')
           ?.match(/=([0-9]*)$/)
           ?.at(1) || ''
+
       // allowed categories only
       const category = categories[categoryNumber]
       if (!category) {
@@ -79,7 +82,7 @@ export default async function ({ url }: ScrapItemParams) {
       // remove parens on both side (beginning/end)
       const tag = tags?.pop()?.replace(/^\(|\)$/gm, '') || ''
       const codeName =
-        category === 'cpu' ? tags?.shift()?.replace(/^\(|\)$/gm, '') : ''
+        category === 'cpu' ? tags?.shift()?.replace(/^\(|\)$/gm, '') || '' : ''
       // remove tag/codename from the name
       if (codeName || tag) {
         const tagStartAt = name.search(codeName || tag)
@@ -135,7 +138,7 @@ export default async function ({ url }: ScrapItemParams) {
           return {
             marketType,
             vendorsList: Array.from(
-              marketContents[index].querySelectorAll('.diff_item')
+              marketContents[index].querySelectorAll('.diff_item') || []
             )
               .map(itemDiv => {
                 const vendorName =
@@ -152,7 +155,7 @@ export default async function ({ url }: ScrapItemParams) {
                   vendorCodedMarkets.includes(marketType) ||
                   itemDiv.querySelector('.npay')
                     ? itemDiv
-                        .getAttribute('data-linkproduct')
+                        ?.getAttribute('data-linkproduct')
                         ?.match(/^.*?(?=_)/m)
                         ?.at(0) || ''
                     : ''
@@ -183,8 +186,10 @@ export default async function ({ url }: ScrapItemParams) {
       /**
        * EXTRACT details
        */
-      const specTableRows = document.querySelectorAll(
-        '#productDescriptionArea .prod_spec table tbody tr'
+      const specTableRows = Array.from(
+        document.querySelectorAll(
+          '#productDescriptionArea .prod_spec table tbody tr'
+        ) || []
       )
       //
       const details: ScrapItemResult['details'] = {}
@@ -192,6 +197,11 @@ export default async function ({ url }: ScrapItemParams) {
       let rowCount = 0
       do {
         const row = specTableRows[rowCount++]
+        // if there's no details info
+        if (!row) {
+          break
+        }
+
         if (row.childElementCount === 1) {
           specType = row.textContent?.trim() || ''
         } else {
