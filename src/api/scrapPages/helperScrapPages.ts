@@ -74,6 +74,8 @@ export default async function ({
      * LOOP through given page indexes
      *      to extract items info from the target page
      */
+    // pages is attached req.body so detach it before mutating
+    pages = [...pages]
     do {
       const pageIndex = pages.shift() as string
 
@@ -100,9 +102,10 @@ export default async function ({
         /**
          * GET items list on the page
          */
-        const pageItems = Array.from(
-          document.querySelectorAll('.prod_item.prod_layer[id^=productItem]')
-        )
+        const pageItems =
+          Array.from(
+            document.querySelectorAll('.prod_item.prod_layer[id^=productItem]')
+          ) || []
 
         /**
          * EXTRACT info from the given item
@@ -136,12 +139,13 @@ export default async function ({
             // EXTRACT pcode
             const pcode =
               priceTag
-                .getAttribute('href')
+                ?.getAttribute('href')
                 ?.match(/pcode=([0-9]*)(?=&)/)
                 ?.at(1) || ''
 
             // EXTRACT stock
-            const stock = priceTag?.innerText.replace(/[^0-9]/gi, '').length > 0
+            const stock =
+              priceTag?.innerText.replace(/[^0-9]/gi, '').length > 0 || false
 
             return {
               tag,
@@ -170,8 +174,6 @@ export default async function ({
 
       await page.waitForTimeout(5000)
     } while (pages.length > 0)
-  } catch (error) {
-    log.error('ScrapPages', error + '')
   } finally {
     await page.close()
 

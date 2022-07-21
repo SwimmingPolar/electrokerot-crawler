@@ -13,38 +13,44 @@ export interface ScrapPagesRequestBody {
   filters?: string[]
 }
 
-router.use(
+router.post(
   '/',
   async (
     req: Request<Empty, Empty, ScrapPagesRequestBody, Empty>,
     res: Response
   ) => {
-    const helperParams = req.body
-    helperParams.minimumDate =
-      helperParams.minimumDate && new Date(helperParams.minimumDate)
+    try {
+      const helperParams = req.body
+      helperParams.minimumDate =
+        helperParams.minimumDate && new Date(helperParams.minimumDate)
+      const { scrappedPages, items } = await helperScrapPages(helperParams)
 
-    const { scrappedPages, items } = await helperScrapPages(helperParams)
+      const { pages: requestedPages } = req.body
 
-    const { pages: requestedPages } = req.body
-    // error
-    if (requestedPages.length !== 0 && scrappedPages.length === 0) {
+      // if nothing is scrapped then it's an error
+      if (requestedPages.length !== 0 && scrappedPages.length === 0) {
+        res.status(500).json({
+          error: `Crawler can't scrap pages. See if html structure changed`
+        })
+        return
+      }
+
+      // see if completely or partially scrapped
+      if (requestedPages.length !== scrappedPages.length) {
+        res.status(206)
+      } else {
+        res.status(200)
+      }
+
+      res.json({
+        scrappedPages,
+        items
+      })
+    } catch (error) {
       res.status(500).json({
         error: 'Crawler internal error'
       })
-      return
     }
-
-    // see if completely or partially scrapped
-    if (requestedPages.length !== scrappedPages.length) {
-      res.status(206)
-    } else {
-      res.status(200)
-    }
-
-    res.json({
-      scrappedPages,
-      items
-    })
   }
 )
 

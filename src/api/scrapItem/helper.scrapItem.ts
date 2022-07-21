@@ -16,15 +16,15 @@ interface ScrapItemResult {
       type: string
     }
   >
-  vendors: Record<
-    string,
-    {
+  vendors: {
+    marketType: string
+    vendorsList: {
       vendorName: string
       vendorCode: string
       url: string
       price: string
     }[]
-  >
+  }[]
 }
 
 export default async function ({ url }: ScrapItemParams) {
@@ -121,7 +121,7 @@ export default async function ({ url }: ScrapItemParams) {
           )
         ) || []
 
-      const isDefined = <T>(x: T | undefined): x is T => !!x
+      const isNotUndefined = <T>(x: T | undefined): x is T => x !== undefined
       const vendors: ScrapItemResult['vendors'] = marketTitles
         .map((div, index) => {
           // skip not-allowed markets
@@ -175,12 +175,10 @@ export default async function ({ url }: ScrapItemParams) {
                   price
                 }
               })
-              // .filter((e): e is  => e)
-              .filter(isDefined)
+              .filter(isNotUndefined)
           }
         })
-        // .filter(e => e)
-        .filter(isDefined)
+        .filter(isNotUndefined)
 
       /**
        * EXTRACT details

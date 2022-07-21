@@ -5,7 +5,7 @@ import scrapItem from './scrapItem'
 
 const router = Router()
 
-router.post('/scrapPages', scrapPages)
-router.post('/scrapItem', scrapItem)
+router.use('/scrapPages', scrapPages)
+router.use('/scrapItem', scrapItem)
 
 export default router

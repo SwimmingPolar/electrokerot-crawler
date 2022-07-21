@@ -16,8 +16,7 @@ const log = {
     console.log(
       new Date().toISOString() +
         ' ' +
-        `[${greenBright('INFO')}]` +
-        ': ' +
+        `[${greenBright('INFO')}] ` +
         cyanBright(info)
     )
   },
@@ -30,11 +29,11 @@ const log = {
     console.log(
       new Date().toISOString() +
         ' ' +
-        `[${yellowBright(`ERROR: ${invoker}`)}]` +
+        `[${yellowBright('ERROR')}] ${yellowBright(invoker)}` +
         ': ' +
         redBright(error)
     )
-    process.exit(1)
+    // process.exit(1)
   }
 }
 export default log

@@ -10,7 +10,7 @@ export interface ScrapItemRequestBody {
 
 const router = Router()
 
-router.use(
+router.post(
   '/',
   async (
     req: Request<Empty, Empty, ScrapItemRequestBody, Empty>,

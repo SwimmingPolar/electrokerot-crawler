@@ -5,7 +5,6 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import log from 'utils/logger'
 
 let browser: Browser
-let page: Page
 
 puppeteer.use(AdblockerPlugin({ blockTrackers: true })).use(StealthPlugin())
 
@@ -15,7 +14,12 @@ export async function initiateBrowser() {
       headless: false,
       defaultViewport: null,
       executablePath: puppeteer.executablePath(),
-      args: ['--disable-dev-shm-usage']
+      args: ['--disable-dev-shm-usage', '--no-sandbox']
+    })
+
+    // re-open browser in case it crashes
+    browser.on('disconnected', async () => {
+      await initiateBrowser()
     })
   } catch (error) {
     log.error('puppeteerHelper', 'browser instantiating failure')

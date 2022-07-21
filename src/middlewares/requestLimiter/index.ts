@@ -5,7 +5,7 @@ const requestLimiter = (function () {
   let currentRequest = 0
   return (req: Request, res: Response, next: NextFunction) => {
     if (currentRequest >= LIMIT) {
-      res.json({
+      res.status(503).json({
         isBusy: true
       })
       return
