@@ -33,7 +33,6 @@ const log = {
         ': ' +
         redBright(error)
     )
-    // process.exit(1)
   }
 }
 export default log

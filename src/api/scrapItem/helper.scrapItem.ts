@@ -47,7 +47,7 @@ export default async function ({
      */
     await page.setOfflineMode(true)
 
-    return await page.evaluate(categories => {
+    const result = await page.evaluate(categories => {
       /**
        * EXTRACT category
        */
@@ -252,6 +252,10 @@ export default async function ({
         details
       }
     }, categories)
+
+    await page.waitForTimeout(3000)
+
+    return result
   } finally {
     /**
      * RE-ESTABLISH network connection on exit

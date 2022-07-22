@@ -95,101 +95,107 @@ export default async function ({
       )
       await page.waitForSelector(contentSelector)
 
-      const result = await page.evaluate(pageIndex => {
-        // 'items' will hold data for 'result'
-        const items: ScrapPagesResult['items'] = []
-
-        /**
-         * GET items list on the page
-         */
-        const pageItems =
-          Array.from(
-            document.querySelectorAll('.prod_item.prod_layer[id^=productItem]')
-          ) || []
-
-        /**
-         * EXTRACT info from the given item
-         */
-        pageItems.forEach((item, nth) => {
-          /**
-           * IGNORE item with ignore words
-           */
-          const registrationDate =
-            item
-              .querySelector('.meta_item.mt_date dd')
-              ?.textContent?.match(/\d{4}/)
-              ?.at(0) || ''
-          if (+registrationDate < +minimumDate) {
-            return
-          }
-          const innerText =
-            (item as HTMLDivElement).innerText.toLowerCase() || ''
-          const containsIgnoreWords = ignoreWords.some(word =>
-            innerText.includes(word)
-          )
-          if (containsIgnoreWords) {
-            return
-          }
+      const result = await page.evaluate(
+        ({ pageIndex, minimumDate, ignoreWords }) => {
+          // 'items' will hold data for 'result'
+          const items: ScrapPagesResult['items'] = []
 
           /**
-           * EXTRACT name
+           * GET items list on the page
            */
-          const name =
-            item.querySelector('.prod_name a')?.textContent?.trim() || ''
-
-          const variants =
-            Array.from(item.querySelectorAll('.prod_pricelist li')) || []
-
-          /**
-           * EXTRACT variantsList
-           */
-          const variantsList = variants.map(variant => {
-            // EXTRACT tag
-            const tag = Array.from(
-              (variant.querySelector('.memory_sect') as HTMLDivElement)
-                ?.childNodes || []
-            )
-              .reduce(
-                (text, current) =>
-                  current.nodeType === 3
-                    ? text + current.textContent?.trim()
-                    : text,
-                ''
+          const pageItems =
+            Array.from(
+              document.querySelectorAll(
+                '.prod_item.prod_layer[id^=productItem]'
               )
-              .trim()
+            ) || []
 
-            const priceTag = variant.querySelector(
-              '.price_sect > a'
-            ) as HTMLAnchorElement
-
-            // EXTRACT pcode
-            const pcode =
-              priceTag
-                ?.getAttribute('href')
-                ?.match(/pcode=([0-9]*)(?=&)/)
-                ?.at(1) || ''
-
-            // EXTRACT stock
-            const stock =
-              priceTag?.innerText.replace(/[^0-9]/gi, '').length > 0 || false
-
-            return {
-              tag,
-              pcode,
-              stock
+          /**
+           * EXTRACT info from the given item
+           */
+          pageItems.forEach((item, nth) => {
+            /**
+             * IGNORE item with ignore words
+             */
+            // if no registration date, ignore
+            const registrationDate =
+              item
+                .querySelector('.meta_item.mt_date dd')
+                ?.textContent?.match(/\d{4}/)
+                ?.at(0) || ''
+            if (+registrationDate < +minimumDate) {
+              return
             }
+            const innerText =
+              (item as HTMLDivElement).innerText?.toLowerCase() || ''
+            const containsIgnoreWords = ignoreWords.some(word =>
+              innerText.includes(word)
+            )
+            if (containsIgnoreWords) {
+              return
+            }
+
+            /**
+             * EXTRACT name
+             */
+            const name =
+              item.querySelector('.prod_name a')?.textContent?.trim() || ''
+
+            const variants =
+              Array.from(item.querySelectorAll('.prod_pricelist li')) || []
+
+            /**
+             * EXTRACT variantsList
+             */
+            const variantsList = variants.map(variant => {
+              // EXTRACT tag
+              const tag = Array.from(
+                (variant.querySelector('.memory_sect') as HTMLDivElement)
+                  ?.childNodes || []
+              )
+                .reduce(
+                  (text, current) =>
+                    current.nodeType === 3
+                      ? text + current.textContent?.trim()
+                      : text,
+                  ''
+                )
+                .trim()
+
+              const priceTag = variant.querySelector(
+                '.price_sect > a'
+              ) as HTMLAnchorElement
+
+              // EXTRACT pcode
+              const pcode =
+                priceTag
+                  ?.getAttribute('href')
+                  ?.match(/pcode=([0-9]*)(?=&)/)
+                  ?.at(1) || ''
+
+              // EXTRACT stock
+              const stock =
+                priceTag?.innerText.replace(/[^0-9]/gi, '').length > 0 || false
+
+              return {
+                tag,
+                pcode,
+                stock
+              }
+            })
+
+            items.push({
+              name,
+              variantsList,
+              page: pageIndex,
+              nth: nth + ''
+            })
           })
 
-          items.push({
-            name,
-            variantsList,
-            page: pageIndex,
-            nth: nth + ''
-          })
-        })
-
-        return items
-      }, pageIndex)
+          return items
+        },
+        { pageIndex, minimumDate, ignoreWords }
+      )
 
       /**
        * SAVE concat scrapped info to the list

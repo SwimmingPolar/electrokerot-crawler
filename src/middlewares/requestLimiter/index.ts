@@ -12,6 +12,7 @@ const requestLimiter = (function () {
     }
     currentRequest++
 
+    // should decrease currentRequest when request is done/error
     res.on('close', () => {
       currentRequest--
     })

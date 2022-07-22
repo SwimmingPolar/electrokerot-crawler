@@ -26,7 +26,7 @@ app.use(bodyParser)
 
   // disallow unknown request methods
   app.all('*', (req: Request, res: Response) => {
-    res.status(403).send(`Forbidden: ${req.url}`)
+    res.status(403).send(`Forbidden: ${req.method} ${req.url}`)
   })
 
   // start crawler
