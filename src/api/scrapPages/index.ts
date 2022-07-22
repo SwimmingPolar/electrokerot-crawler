@@ -8,7 +8,7 @@ type Empty = Record<string, never>
 export interface ScrapPagesRequestBody {
   url: string
   pages: string[]
-  minimumDate?: Date
+  minimumDate?: string
   ignoreWords?: string[]
   filters?: string[]
 }
@@ -21,8 +21,6 @@ router.post(
   ) => {
     try {
       const helperParams = req.body
-      helperParams.minimumDate =
-        helperParams.minimumDate && new Date(helperParams.minimumDate)
       const { scrappedPages, items } = await helperScrapPages(helperParams)
 
       const { pages: requestedPages } = req.body

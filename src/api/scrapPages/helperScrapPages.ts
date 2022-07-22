@@ -20,9 +20,9 @@ interface ScrapPagesResult {
 
 export default async function ({
   url,
-  minimumDate,
-  ignoreWords,
-  filters,
+  minimumDate = '',
+  ignoreWords = [],
+  filters = [],
   pages
 }: ScrapPagesParams): Promise<ScrapPagesResult> {
   const page = await getPage()
@@ -52,7 +52,7 @@ export default async function ({
     /**
      * APPLY optional filters
      */
-    if (filters && filters.length > 0) {
+    if (filters.length > 0) {
       // disconnect network to prevent redundant http requests
       await page.setOfflineMode(true)
 
@@ -111,12 +111,38 @@ export default async function ({
          * EXTRACT info from the given item
          */
         pageItems.forEach((item, nth) => {
+          /**
+           * IGNORE item with ignore words
+           */
+          const registrationDate =
+            item
+              .querySelector('.meta_item.mt_date dd')
+              ?.textContent?.match(/\d{4}/)
+              ?.at(0) || ''
+          if (+registrationDate < +minimumDate) {
+            return
+          }
+          const innerText =
+            (item as HTMLDivElement).innerText.toLowerCase() || ''
+          const containsIgnoreWords = ignoreWords.some(word =>
+            innerText.includes(word)
+          )
+          if (containsIgnoreWords) {
+            return
+          }
+
+          /**
+           * EXTRACT name
+           */
           const name =
             item.querySelector('.prod_name a')?.textContent?.trim() || ''
 
           const variants =
             Array.from(item.querySelectorAll('.prod_pricelist li')) || []
 
+          /**
+           * EXTRACT variantsList
+           */
           const variantsList = variants.map(variant => {
             // EXTRACT tag
             const tag = Array.from(

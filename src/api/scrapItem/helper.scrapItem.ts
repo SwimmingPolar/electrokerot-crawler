@@ -6,6 +6,7 @@ type ScrapItemParams = ScrapItemRequestBody
 
 interface ScrapItemResult {
   name: string
+  category: string
   pcode: string
   tag: string
   stock: boolean
