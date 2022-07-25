@@ -35,6 +35,33 @@ export default async function ({
     await page.goto(url)
 
     /**
+     * APPLY optional filters
+     */
+    if (filters && filters.length > 0) {
+      // open filters
+      await Promise.allSettled([
+        page.click(
+          '#frmProductList > div.option_nav > div.nav_header > div.head_opt > button'
+        ),
+        page.waitForSelector('#extendSearchOptionpriceCompare')
+      ])
+      // disconnect network to prevent redundant http requests
+      await page.setOfflineMode(true)
+      filters.forEach(async (filter, index) => {
+        // re-establish network connection
+        if (filters.length - 1 === index) {
+          await page.waitForTimeout(1500)
+          await page.setOfflineMode(false)
+        }
+
+        await page.evaluate(filter => {
+          const checkbox = document.querySelector<HTMLInputElement>(filter)
+          checkbox?.click()
+        }, filter)
+      })
+    }
+
+    /**
      * BLOCK unnecessary requests
      */
     await page.setRequestInterception(true)
@@ -48,27 +75,6 @@ export default async function ({
         request.abort()
       }
     })
-
-    /**
-     * APPLY optional filters
-     */
-    if (filters.length > 0) {
-      // disconnect network to prevent redundant http requests
-      await page.setOfflineMode(true)
-
-      filters.forEach(async (filter, index) => {
-        // re-establish network connection
-        if (filters.length - 1 === index) {
-          await page.waitForTimeout(1500)
-          await page.setOfflineMode(false)
-        }
-
-        await page.evaluate(filter => {
-          const checkbox = document.querySelector(filter) as HTMLInputElement
-          checkbox?.click()
-        }, filter)
-      })
-    }
 
     /**
      * LOOP through given page indexes

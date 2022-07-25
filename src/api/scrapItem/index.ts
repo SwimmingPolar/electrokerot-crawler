@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import helperScrapItem from 'api/scrapItem/helper.scrapItem'
 import log from 'utils/logger'
+import { RequestDone } from 'middlewares/requestLimiter'
 
 type Empty = Record<string, never>
 
@@ -26,6 +27,8 @@ router.post(
       res.status(500).json({
         error: 'Crawler internal error'
       })
+    } finally {
+      RequestDone()
     }
   }
 )

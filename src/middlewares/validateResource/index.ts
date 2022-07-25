@@ -6,12 +6,12 @@ const validateResource =
   (req: Request, res: Response, next: NextFunction) => {
     try {
       schema.parse(req.body)
-      next()
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json(error)
       }
     }
+    next()
   }
 
 export default validateResource

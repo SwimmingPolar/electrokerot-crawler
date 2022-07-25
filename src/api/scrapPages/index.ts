@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import helperScrapPages from 'api/scrapPages/helperScrapPages'
 import log from 'utils/logger'
+import { RequestDone } from 'middlewares/requestLimiter'
 
 const router = Router()
 
@@ -48,6 +49,8 @@ router.post(
       res.status(500).json({
         error: 'Crawler internal error'
       })
+    } finally {
+      RequestDone()
     }
   }
 )

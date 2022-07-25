@@ -1,4 +1,4 @@
-import { Browser, Page } from 'puppeteer'
+import { Browser } from 'puppeteer'
 import puppeteer from 'puppeteer-extra'
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
