@@ -11,11 +11,13 @@ const log = {
    * @param info Message to show
    */
   info(info: string): void {
-    console.log(
-      new Date().toISOString() +
+    process.stdout.write(
+      '\n' +
+        new Date().toISOString() +
         ' ' +
         `[${greenBright('INFO')}] ` +
-        cyanBright(info)
+        cyanBright(info) +
+        '\n'
     )
   },
   /**
@@ -24,12 +26,13 @@ const log = {
    * @param error Error message
    */
   error(invoker: string, error: string): void {
-    console.log(
+    process.stdout.write(
       new Date().toISOString() +
         ' ' +
         `[${yellowBright('ERROR')}] ${yellowBright(invoker)}` +
         ': ' +
-        redBright(error)
+        redBright(error) +
+        '\n'
     )
   }
 }

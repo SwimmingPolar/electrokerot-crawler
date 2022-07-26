@@ -1,8 +1,13 @@
-// npm packages
 import dotenv from 'dotenv'
-dotenv.config({
-  path: 'config/dev.env'
-})
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({
+    path: 'config/prod.env'
+  })
+} else {
+  dotenv.config({
+    path: 'config/dev.env'
+  })
+}
 import express, { Request, Response } from 'express'
 // user defined
 import bodyParser from 'middlewares/bodyParser'
