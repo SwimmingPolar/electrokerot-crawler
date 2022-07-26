@@ -1,11 +1,10 @@
 import { getPage } from 'utils/puppeteerHelper'
-import log from 'utils/logger'
 import { ScrapPagesRequestBody } from './index'
 
 type ScrapPagesParams = ScrapPagesRequestBody
 
 interface ScrapPagesResult {
-  scrappedPages: string[]
+  scrapedPages: string[]
   items: {
     name: string
     page: string
@@ -26,7 +25,7 @@ export default async function ({
   pages
 }: ScrapPagesParams): Promise<ScrapPagesResult> {
   const page = await getPage()
-  const { scrappedPages = [], items = [] } = {} as ScrapPagesResult
+  const { scrapedPages = [], items = [] } = {} as ScrapPagesResult
 
   try {
     /**
@@ -204,11 +203,11 @@ export default async function ({
       )
 
       /**
-       * SAVE concat scrapped info to the list
-       * SAVE scrapped page index
+       * SAVE concat scraped info to the list
+       * SAVE scraped page index
        */
       items.push(...result)
-      scrappedPages.push(pageIndex)
+      scrapedPages.push(pageIndex)
 
       await page.waitForTimeout(5000)
     } while (pages.length > 0)
@@ -217,7 +216,7 @@ export default async function ({
 
     // eslint-disable-next-line no-unsafe-finally
     return {
-      scrappedPages,
+      scrapedPages,
       items
     }
   }

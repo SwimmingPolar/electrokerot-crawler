@@ -22,27 +22,27 @@ router.post(
   ) => {
     try {
       const helperParams = req.body
-      const { scrappedPages, items } = await helperScrapPages(helperParams)
+      const { scrapedPages, items } = await helperScrapPages(helperParams)
 
       const { pages: requestedPages } = req.body
 
-      // if nothing is scrapped then it's an error
-      if (requestedPages.length !== 0 && scrappedPages.length === 0) {
+      // if nothing is scraped then it's an error
+      if (requestedPages.length !== 0 && scrapedPages.length === 0) {
         res.status(500).json({
           error: `Crawler can't scrap pages. See if html structure changed`
         })
         return
       }
 
-      // see if completely or partially scrapped
-      if (requestedPages.length !== scrappedPages.length) {
+      // see if completely or partially scraped
+      if (requestedPages.length !== scrapedPages.length) {
         res.status(206)
       } else {
         res.status(200)
       }
 
       res.json({
-        scrappedPages,
+        scrapedPages,
         items
       })
     } catch (error) {

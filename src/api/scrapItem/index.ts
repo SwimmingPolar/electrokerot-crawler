@@ -20,8 +20,8 @@ router.post(
     const helperParams = req.body
 
     try {
-      const scrappedResult = await helperScrapItem(helperParams)
-      res.status(200).json(scrappedResult)
+      const scrapedResult = await helperScrapItem(helperParams)
+      res.status(200).json(scrapedResult)
     } catch (error) {
       log.error('ScrapItem', error + '')
       res.status(500).json({
