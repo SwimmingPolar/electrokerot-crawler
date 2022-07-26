@@ -1,6 +1,5 @@
 import { getPage } from 'utils/puppeteerHelper'
-import log from 'utils/logger'
-import { ScrapItemRequestBody } from './index'
+import { ScrapItemRequestBody } from '.'
 
 type ScrapItemParams = ScrapItemRequestBody
 

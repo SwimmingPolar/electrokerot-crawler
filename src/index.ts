@@ -1,20 +1,20 @@
+// npm packages
 import dotenv from 'dotenv'
 dotenv.config({
   path: 'config/dev.env'
 })
 import express, { Request, Response } from 'express'
-
-import { initiateBrowser } from 'utils/puppeteerHelper'
-import log from 'utils/logger'
-import requestLimiter from 'middlewares/requestLimiter'
+// user defined
 import bodyParser from 'middlewares/bodyParser'
+import requestLimiter from 'middlewares/requestLimiter'
+import { log, PuppeteerHelper } from 'utils'
 import api from './api'
 
 const app = express()
 app.use(bodyParser)
 ;(async () => {
   // initiate browser instance
-  await initiateBrowser()
+  await PuppeteerHelper.initiateBrowser()
 
   // health check
   app.get('/', (req: Request, res: Response) => {

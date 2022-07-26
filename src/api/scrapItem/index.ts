@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express'
-import helperScrapItem from 'api/scrapItem/helper.scrapItem'
-import log from 'utils/logger'
+// user defined
+import requestScrapItem from 'api/scrapItem/scrapItem.helper'
 import { RequestDone } from 'middlewares/requestLimiter'
+import { log } from 'utils'
 
 type Empty = Record<string, never>
 
@@ -20,7 +21,7 @@ router.post(
     const helperParams = req.body
 
     try {
-      const scrapedResult = await helperScrapItem(helperParams)
+      const scrapedResult = await requestScrapItem(helperParams)
       res.status(200).json(scrapedResult)
     } catch (error) {
       log.error('ScrapItem', error + '')
