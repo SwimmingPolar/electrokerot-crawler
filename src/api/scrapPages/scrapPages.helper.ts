@@ -38,6 +38,9 @@ export default async function ({
      */
     if (filters && filters.length > 0) {
       // open filters
+      await page.waitForSelector(
+        '#frmProductList > div.option_nav > div.nav_header > div.head_opt > button'
+      )
       await Promise.allSettled([
         page.click(
           '#frmProductList > div.option_nav > div.nav_header > div.head_opt > button'

@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon -L",
-    "build": "tsc && mkdir build && esbuild --platform=node --bundle --minify --outfile=./build/index.js ./src/index.ts"
+    "start": "set NODE_ENV=development && nodemon",
+    "build": "tsc && esbuild --bundle --platform=node --format=esm --external:./node_modules/* --outfile=./build/index.js index.ts"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
+    "chalk": "^4.1.2",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "puppeteer": "^15.4.0",
@@ -38,5 +39,6 @@
     "puppeteer-extra-plugin-adblocker": "^2.13.4",
     "puppeteer-extra-plugin-stealth": "^2.11.0",
     "zod": "^3.17.9"
-  }
+  },
+  "type": "module"
 }

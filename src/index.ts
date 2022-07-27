@@ -1,9 +1,5 @@
 import dotenv from 'dotenv'
-if (process.env.NODE_ENV === 'production') {
-  dotenv.config({
-    path: 'config/prod.env'
-  })
-} else {
+if (process.env.NODE_ENV === 'development') {
   dotenv.config({
     path: 'config/dev.env'
   })
@@ -35,7 +31,7 @@ app.use(bodyParser)
   })
 
   // start crawler
-  const PORT = process.env.PORT || 20000
+  const PORT = process.env.SERVICE_PORT || 20000
   app.listen(PORT, () => {
     log.info(`Crawler running on ${PORT}`)
   })

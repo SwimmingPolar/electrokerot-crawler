@@ -10,12 +10,17 @@ let browser: Browser
 puppeteer.use(AdblockerPlugin({ blockTrackers: true })).use(StealthPlugin())
 
 export async function initiateBrowser() {
+  const proxy = process.env.HTTP_PROXY
   try {
     browser = await puppeteer.launch({
-      headless: false,
+      headless: process.env.NODE_ENV === 'production' ? true : false,
       defaultViewport: null,
       executablePath: puppeteer.executablePath(),
-      args: ['--disable-dev-shm-usage', '--no-sandbox']
+      args: [
+        '--disable-dev-shm-usage',
+        '--no-sandbox',
+        proxy ? `--proxy-server=${proxy}` : ''
+      ]
     })
 
     // re-open browser in case it crashes
@@ -23,7 +28,7 @@ export async function initiateBrowser() {
       await initiateBrowser()
     })
   } catch (error) {
-    log.error('puppeteerHelper', 'browser instantiating failure')
+    log.error('PuppeteerHelper', error + '')
   }
 }
 
