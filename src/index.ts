@@ -1,14 +1,14 @@
 import dotenv from 'dotenv'
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV?.trim() === 'development') {
   dotenv.config({
     path: 'config/dev.env'
   })
 }
 import express, { Request, Response } from 'express'
 // user defined
-import bodyParser from 'middlewares/bodyParser'
-import requestLimiter from 'middlewares/requestLimiter'
-import { log, PuppeteerHelper } from 'utils'
+import bodyParser from './middlewares/bodyParser'
+import requestLimiter from './middlewares/requestLimiter'
+import { log, PuppeteerHelper } from './utils'
 import api from './api'
 
 const app = express()

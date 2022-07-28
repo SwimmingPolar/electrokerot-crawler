@@ -1,4 +1,4 @@
-import { getPage } from 'utils/puppeteerHelper'
+import { PuppeteerHelper } from '../../utils'
 import { ScrapItemRequestBody } from '.'
 
 type ScrapItemParams = ScrapItemRequestBody
@@ -33,13 +33,16 @@ export default async function ({
   /**
    * GET new page
    */
-  const page = await getPage()
+  const page = await PuppeteerHelper.getPage()
 
   try {
     /**
      * GOTO the target page
      */
-    await page.goto(url)
+    await page.goto(url, {
+      timeout: 180,
+      waitUntil: 'networkidle0'
+    })
 
     /**
      * DISCONNECT network to prevent unnecessary resource usage

@@ -5,7 +5,7 @@ import scrapItem from './scrapItem'
 import validateResource, {
   ScrapPagesSchema,
   ScrapItemSchema
-} from 'middlewares/validateResource'
+} from '../middlewares/validateResource'
 
 const router = Router()
 

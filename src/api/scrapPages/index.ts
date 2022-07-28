@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express'
 // user defined
-import requestScrapPages from 'api/scrapPages/scrapPages.helper'
-import { RequestDone } from 'middlewares/requestLimiter'
-import { log } from 'utils'
+import { RequestDone } from '../../middlewares/requestLimiter'
+import requestScrapPages from './scrapPages.helper'
+import { log } from '../../utils'
 
 const router = Router()
 

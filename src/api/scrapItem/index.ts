@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express'
 // user defined
-import requestScrapItem from 'api/scrapItem/scrapItem.helper'
-import { RequestDone } from 'middlewares/requestLimiter'
-import { log } from 'utils'
+import { RequestDone } from '../../middlewares/requestLimiter'
+import requestScrapItem from './scrapItem.helper'
+import { log } from '../../utils'
 
 type Empty = Record<string, never>
 

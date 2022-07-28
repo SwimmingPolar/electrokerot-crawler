@@ -26,8 +26,6 @@ COPY --from=builder /app/build ./build
 COPY ./package*.json .
 RUN npm ci --only=production
 
-ARG HOST=127.0.0.1
-ARG SERVICE_PORT=20000
-HEALTHCHECK --interval=15s --timeout=15s --start-period=5s --retries=5 CMD wget --no-verbose --tries=3 --spider http://${HOST}:${SERVICE_PORT}/ || exit 1
+HEALTHCHECK --interval=45s --timeout=15s --start-period=5s --retries=5 CMD wget --no-verbose --tries=3 --spider localhost:20000/ || exit 1
 
 CMD ["node", "/app/build/index.js"]

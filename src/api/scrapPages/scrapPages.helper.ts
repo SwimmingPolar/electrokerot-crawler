@@ -1,5 +1,5 @@
-import { getPage } from 'utils/puppeteerHelper'
-import { ScrapPagesRequestBody } from './index'
+import { PuppeteerHelper } from '../../utils'
+import { ScrapPagesRequestBody } from '.'
 
 type ScrapPagesParams = ScrapPagesRequestBody
 
@@ -24,14 +24,17 @@ export default async function ({
   filters = [],
   pages
 }: ScrapPagesParams): Promise<ScrapPagesResult> {
-  const page = await getPage()
+  const page = await PuppeteerHelper.getPage()
   const { scrapedPages = [], items = [] } = {} as ScrapPagesResult
 
   try {
     /**
      * GOTO the target page
      */
-    await page.goto(url)
+    await page.goto(url, {
+      timeout: 180000,
+      waitUntil: 'networkidle0'
+    })
 
     /**
      * APPLY optional filters
@@ -95,13 +98,15 @@ export default async function ({
       const contentSelector = '.main_prodlist.main_prodlist_list'
       await page.evaluate(
         (pageIndex, selector) => {
-          ;(document.querySelector(`${selector}`) as HTMLDivElement).remove()
+          document.querySelector<HTMLDivElement>(`${selector}`)?.remove()
           eval(`movePage(${pageIndex})`)
         },
         pageIndex,
         contentSelector
       )
-      await page.waitForSelector(contentSelector)
+      await page.waitForSelector(contentSelector, {
+        timeout: 180000
+      })
 
       const result = await page.evaluate(
         ({ pageIndex, minimumDate, ignoreWords }) => {

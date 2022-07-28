@@ -3,24 +3,27 @@ import puppeteer from 'puppeteer-extra'
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 // user defined
-import log from 'utils/logger'
+import log from './logger'
 
 let browser: Browser
 
 puppeteer.use(AdblockerPlugin({ blockTrackers: true })).use(StealthPlugin())
 
 export async function initiateBrowser() {
+  const isProduction = process.env.NODE_ENV === 'production'
   const proxy = process.env.HTTP_PROXY
+  const args = ['--disable-dev-shm-usage', '--no-sandbox']
+  if (isProduction && proxy) {
+    args.concat(`--proxy-server=${proxy}`)
+  }
   try {
     browser = await puppeteer.launch({
       headless: process.env.NODE_ENV === 'production' ? true : false,
       defaultViewport: null,
-      executablePath: puppeteer.executablePath(),
-      args: [
-        '--disable-dev-shm-usage',
-        '--no-sandbox',
-        proxy ? `--proxy-server=${proxy}` : ''
-      ]
+      executablePath: isProduction
+        ? process.env.PUPPETEER_EXECUTABLE_PATH
+        : puppeteer.executablePath(),
+      args
     })
 
     // re-open browser in case it crashes
