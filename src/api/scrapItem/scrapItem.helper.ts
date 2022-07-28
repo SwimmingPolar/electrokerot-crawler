@@ -40,7 +40,7 @@ export default async function ({
      * GOTO the target page
      */
     await page.goto(url, {
-      timeout: 180,
+      timeout: 240000,
       waitUntil: 'networkidle0'
     })
 
