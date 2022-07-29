@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 
-const LIMIT = 1
+const LIMIT = 3
 let currentRequest = 0
 
 const RequestTaken = () => currentRequest++
