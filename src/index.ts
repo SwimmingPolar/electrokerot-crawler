@@ -7,23 +7,30 @@ if (process.env.NODE_ENV?.trim() === 'development') {
 import express, { Request, Response } from 'express'
 // user defined
 import bodyParser from './middlewares/bodyParser'
-import requestLimiter from './middlewares/requestLimiter'
-import { log, PuppeteerHelper } from './utils'
+import { log, PuppeteerHelper, checkProxyStatus } from './utils'
 import api from './api'
 
 const app = express()
 app.use(bodyParser)
 ;(async () => {
+  // check proxy status before start under production mode
+  if (process.env.NODE_ENV?.trim() === 'production') {
+    await checkProxyStatus()
+  }
   // initiate browser instance
   await PuppeteerHelper.initiateBrowser()
 
   // health check
-  app.get('/', (req: Request, res: Response) => {
+  app.get('/', async (req: Request, res: Response) => {
+    // production mode health check
+    if (process.env.NODE_ENV?.trim() === 'production') {
+      await checkProxyStatus()
+    }
     res.status(200).send()
   })
 
   // connect routes
-  app.use('/', requestLimiter, api)
+  app.use('/', api)
 
   // disallow unknown request methods
   app.all('*', (req: Request, res: Response) => {

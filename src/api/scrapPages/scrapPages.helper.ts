@@ -1,4 +1,4 @@
-import { PuppeteerHelper } from '../../utils'
+import { PuppeteerHelper, randomUserAgent } from '../../utils'
 import { ScrapPagesRequestBody } from '.'
 
 type ScrapPagesParams = ScrapPagesRequestBody
@@ -28,6 +28,7 @@ export default async function ({
   const { scrapedPages = [], items = [] } = {} as ScrapPagesResult
 
   try {
+    await page.setUserAgent(randomUserAgent())
     /**
      * GOTO the target page
      */

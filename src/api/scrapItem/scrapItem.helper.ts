@@ -1,4 +1,4 @@
-import { PuppeteerHelper } from '../../utils'
+import { PuppeteerHelper, randomUserAgent } from '../../utils'
 import { ScrapItemRequestBody } from '.'
 
 type ScrapItemParams = ScrapItemRequestBody
@@ -36,6 +36,7 @@ export default async function ({
   const page = await PuppeteerHelper.getPage()
 
   try {
+    await page.setUserAgent(randomUserAgent())
     /**
      * GOTO the target page
      */
@@ -43,11 +44,6 @@ export default async function ({
       timeout: 120000,
       waitUntil: 'networkidle2'
     })
-
-    /**
-     * DISCONNECT network to prevent unnecessary resource usage
-     */
-    await page.setOfflineMode(true)
 
     const result = await page.evaluate(
       (url, categories) => {
@@ -270,11 +266,6 @@ export default async function ({
 
     return result
   } finally {
-    /**
-     * RE-ESTABLISH network connection on exit
-     */
-    await page.setOfflineMode(false)
-
     /**
      * CLOSE opened tab
      */
