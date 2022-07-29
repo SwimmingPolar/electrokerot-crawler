@@ -32,8 +32,8 @@ export default async function ({
      * GOTO the target page
      */
     await page.goto(url, {
-      timeout: 180000,
-      waitUntil: 'networkidle0'
+      timeout: 120000,
+      waitUntil: 'networkidle2'
     })
 
     /**
@@ -42,14 +42,17 @@ export default async function ({
     if (filters && filters.length > 0) {
       // open filters
       await page.waitForSelector(
+        '#frmProductList > div.option_nav > div.nav_header > div.head_opt > button',
+        {
+          timeout: 120000
+        }
+      )
+      await page.click(
         '#frmProductList > div.option_nav > div.nav_header > div.head_opt > button'
       )
-      await Promise.allSettled([
-        page.click(
-          '#frmProductList > div.option_nav > div.nav_header > div.head_opt > button'
-        ),
-        page.waitForSelector('#extendSearchOptionpriceCompare')
-      ])
+      await page.waitForSelector('#extendSearchOptionpriceCompare', {
+        timeout: 120000
+      })
       // disconnect network to prevent redundant http requests
       await page.setOfflineMode(true)
       filters.forEach(async (filter, index) => {
@@ -105,7 +108,7 @@ export default async function ({
         contentSelector
       )
       await page.waitForSelector(contentSelector, {
-        timeout: 180000
+        timeout: 120000
       })
 
       const result = await page.evaluate(

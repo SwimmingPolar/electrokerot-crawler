@@ -14,7 +14,7 @@ export async function initiateBrowser() {
   const proxy = process.env.HTTP_PROXY
   const args = ['--disable-dev-shm-usage', '--no-sandbox']
   if (isProduction && proxy) {
-    args.concat(`--proxy-server=${proxy}`)
+    args.push(`--proxy-server=${proxy}`)
   }
   try {
     browser = await puppeteer.launch({
