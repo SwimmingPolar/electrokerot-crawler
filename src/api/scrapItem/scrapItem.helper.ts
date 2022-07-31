@@ -45,6 +45,9 @@ export default async function ({
       waitUntil: 'networkidle2'
     })
 
+    await page.waitForSelector("div[id='2DepthCategory'] .now a", {
+      timeout: 120000
+    })
     const result = await page.evaluate(
       (url, categories) => {
         /**
