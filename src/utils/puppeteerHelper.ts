@@ -32,6 +32,7 @@ export async function initiateBrowser() {
     })
   } catch (error) {
     log.error('PuppeteerHelper', error + '')
+    process.exit(1)
   }
 }
 
