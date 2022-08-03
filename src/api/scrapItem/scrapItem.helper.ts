@@ -250,11 +250,18 @@ export default async function ({
           ['', '인증'].some(f => !specType.includes(f))
         )
 
+        // if codeName is not empty, add it to details
+        if (codeName) {
+          details['코드 네임'] = {
+            value: codeName,
+            type: '기본정보'
+          }
+        }
+
         return {
           name,
           category,
           pcode,
-          codeName,
           tag,
           stock,
           vendors,
@@ -276,7 +283,7 @@ export default async function ({
   }
 }
 
-const categories: Record<string, string | undefined> = {
+const categories: Record<string, string> = {
   '112747': 'cpu',
   '112751': 'mainboard',
   '112752': 'memory',
