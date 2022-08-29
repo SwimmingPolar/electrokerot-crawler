@@ -1,5 +1,5 @@
-import { PuppeteerHelper, randomUserAgent } from '../../utils'
 import { ScrapPagesRequestBody } from '.'
+import { getPage } from '../../helper'
 
 type ScrapPagesParams = ScrapPagesRequestBody
 
@@ -24,17 +24,16 @@ export default async function ({
   filters = [],
   pages
 }: ScrapPagesParams): Promise<ScrapPagesResult> {
-  const page = await PuppeteerHelper.getPage()
+  const page = await getPage()
   const { scrapedPages = [], items = [] } = {} as ScrapPagesResult
 
   try {
-    await page.setUserAgent(randomUserAgent())
     /**
      * GOTO the target page
      */
     await page.goto(url, {
       timeout: 120000,
-      waitUntil: 'networkidle2'
+      waitUntil: 'domcontentloaded'
     })
 
     /**
@@ -143,20 +142,19 @@ export default async function ({
             if (+registrationDate < +minimumDate) {
               return
             }
-            const innerText =
-              (item as HTMLDivElement).innerText?.toLowerCase() || ''
-            const containsIgnoreWords = ignoreWords.some(word =>
-              innerText.includes(word)
-            )
-            if (containsIgnoreWords) {
-              return
-            }
+
+            // ignore if contains ignore words
+            const includesIgnoreWords = (text: string) =>
+              ignoreWords.some(word => text.includes(word))
 
             /**
              * EXTRACT name
              */
             const name =
               item.querySelector('.prod_name a')?.textContent?.trim() || ''
+            if (includesIgnoreWords(name)) {
+              return
+            }
 
             const variants =
               Array.from(item.querySelectorAll('.prod_pricelist li')) || []
@@ -164,45 +162,54 @@ export default async function ({
             /**
              * EXTRACT variantsList
              */
-            const variantsList = variants.map(variant => {
-              // EXTRACT tag
-              const tag = Array.from(
-                (variant.querySelector('.memory_sect') as HTMLDivElement)
-                  ?.childNodes || []
-              )
-                .reduce(
-                  (text, current) =>
-                    current.nodeType === 3
-                      ? text + current.textContent?.trim()
-                      : text,
-                  ''
+            const isNotUndefined = <T>(x: T | undefined): x is T =>
+              x !== undefined
+            const variantsList = variants
+              .map(variant => {
+                // EXTRACT tag
+                const tag = Array.from(
+                  (variant.querySelector('.memory_sect') as HTMLDivElement)
+                    ?.childNodes || []
                 )
-                .trim()
+                  .reduce(
+                    (text, current) =>
+                      current.nodeType === 3
+                        ? text + current.textContent?.trim()
+                        : text,
+                    ''
+                  )
+                  .trim()
+                if (includesIgnoreWords(tag)) {
+                  return
+                }
 
-              const priceTag = variant.querySelector(
-                '.price_sect > a'
-              ) as HTMLAnchorElement
+                const priceTag = variant.querySelector(
+                  '.price_sect > a'
+                ) as HTMLAnchorElement
 
-              // EXTRACT pcode
-              const pcode =
-                priceTag
-                  ?.getAttribute('href')
-                  ?.match(/pcode=([0-9]*)(?=&)/)
-                  ?.at(1) || ''
+                // EXTRACT pcode
+                const pcode =
+                  priceTag
+                    ?.getAttribute('href')
+                    ?.match(/pcode=([0-9]*)(?=&)/)
+                    ?.at(1) || ''
 
-              // EXTRACT stock
-              const stock =
-                priceTag?.innerText.replace(/[^0-9]/gi, '').length > 0 || false
+                // EXTRACT stock
+                const stock =
+                  priceTag?.innerText.replace(/[^0-9]/gi, '').length > 0 ||
+                  false
 
-              return {
-                tag,
-                pcode,
-                stock
-              }
-            })
+                return {
+                  tag,
+                  pcode,
+                  stock
+                }
+              })
+              .filter(isNotUndefined)
 
             items.push({
               name,
+
               variantsList,
               page: pageIndex,
               nth: nth + ''

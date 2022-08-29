@@ -5,7 +5,7 @@ const { greenBright, yellowBright, cyanBright, redBright } = chalk
  * @method info
  * @method error
  */
-const log = {
+export const log = {
   /**
    *
    * log successful message to console
@@ -37,4 +37,3 @@ const log = {
     )
   }
 }
-export default log

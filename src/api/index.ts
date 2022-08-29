@@ -13,14 +13,14 @@ const router = Router()
 
 router.use(
   '/scrapPages',
-  requestLimiter,
   validateResource(ScrapPagesSchema),
+  requestLimiter,
   scrapPages
 )
 router.use(
   '/scrapItem',
-  requestLimiter,
   validateResource(ScrapItemSchema),
+  requestLimiter,
   scrapItem
 )
 

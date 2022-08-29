@@ -1,8 +1,6 @@
-import { Router, Request, Response } from 'express'
-// user defined
-import { RequestDone } from '../../middlewares/requestLimiter'
-import requestScrapItem from './scrapItem.helper'
+import { Request, Response, Router } from 'express'
 import { log } from '../../utils'
+import requestScrapItem from './scrapItem.helper'
 
 type Empty = Record<string, never>
 
@@ -18,19 +16,16 @@ router.post(
     req: Request<Empty, Empty, ScrapItemRequestBody, Empty>,
     res: Response
   ) => {
-    const helperParams = req.body
+    const { url } = req.body
 
     try {
-      const scrapedResult = await requestScrapItem(helperParams)
+      const scrapedResult = await requestScrapItem(url)
       res.status(200).json(scrapedResult)
     } catch (error) {
       log.error('ScrapItem', error + '')
-      console.log(error)
       res.status(500).json({
         error: 'Crawler internal error'
       })
-    } finally {
-      RequestDone()
     }
   }
 )

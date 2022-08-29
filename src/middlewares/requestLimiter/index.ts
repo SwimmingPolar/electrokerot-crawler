@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 
-const LIMIT = 3
+const LIMIT = 7
 let currentRequest = 0
 
 const RequestTaken = () => currentRequest++
@@ -8,18 +8,20 @@ const RequestTaken = () => currentRequest++
 export const RequestDone = () => currentRequest--
 
 const requestLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // if limit is reached,
+  // send 503 and do not proceed
   if (currentRequest >= LIMIT) {
     res.status(503).json({
       isBusy: true
     })
     return
   }
-  // send 503 and do not proceed
   // indicates that request is taken and will be processed
   RequestTaken()
 
-  // next function will have to call RequestDone to indicate that request is done
-  // and release the request limiter for another request
+  // release limit after request is done
+  res.once('finish', RequestDone)
+
   next()
 }
 

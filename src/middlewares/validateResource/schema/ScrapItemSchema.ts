@@ -2,8 +2,8 @@ import { object, string } from 'zod'
 
 const ScrapItemsSchema = object({
   url: string({
-    required_error: 'baseUrl is required',
-    invalid_type_error: 'baseUrl has invalid type'
+    required_error: 'url is required',
+    invalid_type_error: 'url has invalid type'
   }).url({
     message: 'Invalid url'
   })

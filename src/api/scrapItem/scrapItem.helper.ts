@@ -1,7 +1,4 @@
-import { PuppeteerHelper, randomUserAgent } from '../../utils'
-import { ScrapItemRequestBody } from '.'
-
-type ScrapItemParams = ScrapItemRequestBody
+import { getPage } from '../../helper'
 
 interface ScrapItemResult {
   name: string
@@ -16,38 +13,78 @@ interface ScrapItemResult {
       type: string
     }
   >
-  vendors: {
-    marketType: string
-    vendorsList: {
+  vendors: Record<
+    string,
+    {
       vendorName: string
       vendorCode: string
       url: string
       price: string
+      card: string
+      shippingCost: string
     }[]
-  }[]
+  >
 }
 
-export default async function ({
-  url
-}: ScrapItemParams): Promise<ScrapItemResult> {
+export default async function (url: string): Promise<ScrapItemResult> {
   /**
    * GET new page
    */
-  const page = await PuppeteerHelper.getPage()
+  const page = await getPage()
 
   try {
-    await page.setUserAgent(randomUserAgent())
     /**
      * GOTO the target page
      */
     await page.goto(url, {
-      timeout: 120000,
-      waitUntil: 'networkidle2'
+      waitUntil: 'domcontentloaded',
+      timeout: 100000
     })
 
-    await page.waitForSelector("div[id='2DepthCategory'] .now a", {
-      timeout: 120000
+    // wait for necessary elements to be loaded
+    await Promise.all([
+      page.waitForSelector("div[id='2DepthCategory'] .now a", {
+        timeout: 100000
+      }),
+      page.waitForSelector(
+        '#priceCompareArea div.diff_opt_area .cardSaleChkbox span a',
+        {
+          timeout: 100000
+        }
+      )
+    ])
+    // apply credit card discount
+    await page.click(
+      '#priceCompareArea div.diff_opt_area .cardSaleChkbox span a'
+    )
+    // wait for the discount to be applied
+    await page.waitForResponse(
+      response => {
+        const targetUrl =
+          'https://prod.danawa.com/info/ajax/getAllPriceCompareMallList.ajax.php'
+
+        const url = response.url()
+        const status = response.status()
+        if (status === 200 && url === targetUrl) {
+          return true
+        }
+        return false
+      },
+      {
+        timeout: 100000
+      }
+    )
+
+    // go to details section
+    await page.waitForSelector('#bookmark_product_information_item > a', {
+      timeout: 100000
     })
+    await page.click('#bookmark_product_information_item > a')
+    // wait for details section to load
+    await page.waitForSelector('#productDescriptionArea tbody', {
+      timeout: 100000
+    })
+
     const result = await page.evaluate(
       (url, categories) => {
         /**
@@ -114,40 +151,26 @@ export default async function ({
         /**
          * EXTRACT vendors
          */
-        const allowedMarketTypes = [
-          '오픈마켓',
-          '백화점 / 홈쇼핑 / 종합몰',
-          '카드/현금 동일 전문몰',
-          '일반 전문몰'
-        ]
+        const allowedMarketTypes = {
+          openMarket: '#OpenMarketMallListDiv',
+          mall: '#AffiliateMallListDiv',
+          credit: '#cardCashMallList',
+          cash: '#cashMallList'
+        }
+        const marketsList = Object.values(allowedMarketTypes).map(selector =>
+          document.querySelector(selector)
+        )
         // vendorCodes under below markets will be saved
-        const vendorCodedMarkets = ['카드/현금 동일 전문몰', '일반 전문몰']
-        const marketTitles =
-          Array.from(
-            document.querySelectorAll('#priceCompareArea .diff_tit')
-          ) || []
-        const marketContents =
-          Array.from(
-            document.querySelectorAll(
-              '#priceCompareArea .diff_cont:not(.diff_cont .diff_cont)'
-            )
-          ) || []
+        const vendorCodedMarkets = ['credit', 'cash']
 
         const isNotUndefined = <T>(x: T | undefined): x is T => x !== undefined
-        const vendors: ScrapItemResult['vendors'] = marketTitles
-          .map((div, index) => {
-            // skip not-allowed markets
-            const marketType = allowedMarketTypes.find(allowedType =>
-              div.textContent?.trim()?.includes(allowedType)
-            )
-            if (!marketType) {
-              return
-            }
-
+        // const vendors: ScrapItemResult['vendors'] = marketTitles.reduce(
+        const vendors = Object.keys(allowedMarketTypes).reduce(
+          (allVendors, marketType, index) => {
             return {
-              marketType,
-              vendorsList: Array.from(
-                marketContents[index].querySelectorAll('.diff_item') || []
+              ...allVendors,
+              [marketType]: Array.from(
+                marketsList[index]?.querySelectorAll('.diff_item') || []
               )
                 .map(itemDiv => {
                   const vendorName =
@@ -173,9 +196,20 @@ export default async function ({
                     itemDiv.querySelector('.d_buy a')?.getAttribute('href') ||
                     ''
 
+                  // consider credit card discount applied on open market
+                  const priceWithCreditCardDiscount =
+                    itemDiv.querySelector('.d_dsc .card_line') ||
+                    itemDiv.querySelector('.d_dsc .prc_line')
                   const price =
-                    itemDiv
-                      .querySelector('.d_dsc .prc_line .price')
+                    priceWithCreditCardDiscount
+                      ?.querySelector('em')
+                      ?.textContent?.replace(/[^0-9]/g, '') || ''
+                  const card =
+                    priceWithCreditCardDiscount?.querySelector('.txt')
+                      ?.textContent || ''
+                  const shippingCost =
+                    priceWithCreditCardDiscount
+                      ?.querySelector('.ship')
                       ?.textContent?.replace(/[^0-9]/g, '') || ''
                   if (!price) {
                     return
@@ -185,23 +219,34 @@ export default async function ({
                     vendorName,
                     vendorCode,
                     url,
-                    price
+                    price,
+                    card,
+                    shippingCost
                   }
                 })
                 .filter(isNotUndefined)
             }
-          })
-          .filter(isNotUndefined)
+          },
+          {} as ScrapItemResult['vendors']
+        )
 
         /**
          * EXTRACT details
          */
+        let subType = ''
+        if (['graphics', 'cooler'].includes(category)) {
+          subType =
+            document
+              .querySelector(
+                '.top_summary .spec_set .spec_list a:nth-of-type(1)'
+              )
+              ?.textContent?.trim() || ''
+        }
         const specTableRows = Array.from(
           document.querySelectorAll(
             '#productDescriptionArea .prod_spec table tbody tr'
           ) || []
         )
-        //
         const details: ScrapItemResult['details'] = {}
         let specType = '기본정보'
         let rowCount = 0
@@ -257,6 +302,13 @@ export default async function ({
             type: '기본정보'
           }
         }
+        // if subType is not empty, add it to details
+        if (subType) {
+          details['분류'] = {
+            value: subType,
+            type: '기본정보'
+          }
+        }
 
         return {
           name,
@@ -272,7 +324,8 @@ export default async function ({
       categories
     )
 
-    await page.waitForTimeout(5000)
+    // scraping delay
+    await page.waitForTimeout(6000)
 
     return result
   } finally {
@@ -285,7 +338,7 @@ export default async function ({
 
 const categories: Record<string, string> = {
   '112747': 'cpu',
-  '112751': 'mainboard',
+  '112751': 'motherboard',
   '112752': 'memory',
   '112753': 'graphics',
   '112760': 'ssd',

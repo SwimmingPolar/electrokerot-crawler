@@ -1,8 +1,7 @@
-import { Router, Request, Response } from 'express'
+import { Request, Response, Router } from 'express'
 // user defined
-import { RequestDone } from '../../middlewares/requestLimiter'
-import requestScrapPages from './scrapPages.helper'
 import { log } from '../../utils'
+import requestScrapPages from './scrapPages.helper'
 
 const router = Router()
 
@@ -22,15 +21,17 @@ router.post(
     res: Response
   ) => {
     try {
-      const helperParams = req.body
-      const { scrapedPages, items } = await requestScrapPages(helperParams)
+      const scrapPagesRequestBody = req.body
+      const { scrapedPages, items } = await requestScrapPages(
+        scrapPagesRequestBody
+      )
 
       const { pages: requestedPages } = req.body
 
       // if nothing is scraped then it's an error
       if (requestedPages.length !== 0 && scrapedPages.length === 0) {
         res.status(500).json({
-          error: `Crawler can't scrap pages. See if html structure changed`
+          error: 'Crawler internal error'
         })
         return
       }
@@ -51,8 +52,6 @@ router.post(
       res.status(500).json({
         error: 'Crawler internal error'
       })
-    } finally {
-      RequestDone()
     }
   }
 )

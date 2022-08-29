@@ -5,9 +5,9 @@ if (process.env.NODE_ENV?.trim() === 'development') {
   })
 }
 import express, { Request, Response } from 'express'
-// user defined
 import bodyParser from './middlewares/bodyParser'
-import { log, PuppeteerHelper, checkProxyStatus } from './utils'
+import { log } from './utils'
+import { initiateBrowser, checkProxyStatus } from './helper'
 import api from './api'
 
 const app = express()
@@ -18,7 +18,7 @@ app.use(bodyParser)
     await checkProxyStatus()
   }
   // initiate browser instance
-  await PuppeteerHelper.initiateBrowser()
+  await initiateBrowser()
 
   // health check
   app.get('/', async (req: Request, res: Response) => {

@@ -2,8 +2,7 @@ import { Browser } from 'puppeteer'
 import puppeteer from 'puppeteer-extra'
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
-// user defined
-import log from './logger'
+import { log, randomUA } from '../utils'
 
 let browser: Browser
 
@@ -18,12 +17,16 @@ export async function initiateBrowser() {
   }
   try {
     browser = await puppeteer.launch({
-      headless: process.env.NODE_ENV === 'production' ? true : false,
       defaultViewport: null,
       executablePath: isProduction
         ? process.env.PUPPETEER_EXECUTABLE_PATH
         : puppeteer.executablePath(),
-      args
+      args,
+      ignoreDefaultArgs: [
+        '--enable-automation',
+        '--disable-extensions',
+        '--disable-gpu'
+      ]
     })
 
     // re-open browser in case it crashes
@@ -44,5 +47,7 @@ export async function getBrowser() {
 }
 
 export async function getPage() {
-  return await (await getBrowser()).newPage()
+  const page = await (await getBrowser()).newPage()
+  page.setUserAgent(randomUA())
+  return page
 }
