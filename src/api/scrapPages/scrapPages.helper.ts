@@ -1,5 +1,6 @@
 import { ScrapPagesRequestBody } from '.'
 import { getPage } from '../../helper'
+import { retry } from '../../utils'
 
 type ScrapPagesParams = ScrapPagesRequestBody
 
@@ -17,6 +18,8 @@ interface ScrapPagesResult {
   }[]
 }
 
+const TIMEOUT = 60000
+
 export default async function ({
   url,
   minimumDate = '',
@@ -31,10 +34,13 @@ export default async function ({
     /**
      * GOTO the target page
      */
-    await page.goto(url, {
-      timeout: 120000,
-      waitUntil: 'domcontentloaded'
-    })
+    const goto = async () => {
+      await page.goto(url, {
+        waitUntil: 'domcontentloaded',
+        timeout: TIMEOUT
+      })
+    }
+    await retry(goto, 3)()
 
     /**
      * APPLY optional filters
@@ -44,14 +50,14 @@ export default async function ({
       await page.waitForSelector(
         '#frmProductList > div.option_nav > div.nav_header > div.head_opt > button',
         {
-          timeout: 120000
+          timeout: TIMEOUT
         }
       )
       await page.click(
         '#frmProductList > div.option_nav > div.nav_header > div.head_opt > button'
       )
       await page.waitForSelector('#extendSearchOptionpriceCompare', {
-        timeout: 120000
+        timeout: TIMEOUT
       })
       // disconnect network to prevent redundant http requests
       await page.setOfflineMode(true)
@@ -108,7 +114,7 @@ export default async function ({
         contentSelector
       )
       await page.waitForSelector(contentSelector, {
-        timeout: 120000
+        timeout: TIMEOUT
       })
 
       const result = await page.evaluate(
@@ -228,7 +234,7 @@ export default async function ({
       items.push(...result)
       scrapedPages.push(pageIndex)
 
-      await page.waitForTimeout(5000)
+      await page.waitForTimeout(1500)
     } while (pages.length > 0)
   } finally {
     await page.close()

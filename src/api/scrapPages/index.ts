@@ -1,5 +1,6 @@
-import { Request, Response, Router } from 'express'
-// user defined
+import { NextFunction, Request, Response, Router } from 'express'
+import { CrawlerInternalError } from '../../helper'
+import { RequestDone } from '../../middlewares/requestLimiter'
 import { log } from '../../utils'
 import requestScrapPages from './scrapPages.helper'
 
@@ -18,7 +19,8 @@ router.post(
   '/',
   async (
     req: Request<Empty, Empty, ScrapPagesRequestBody, Empty>,
-    res: Response
+    res: Response,
+    next: NextFunction
   ) => {
     try {
       const scrapPagesRequestBody = req.body
@@ -28,30 +30,24 @@ router.post(
 
       const { pages: requestedPages } = req.body
 
-      // if nothing is scraped then it's an error
+      // if nothing is scraped then there's something wrong puppeteer or network (proxy)
       if (requestedPages.length !== 0 && scrapedPages.length === 0) {
-        res.status(500).json({
-          error: 'Crawler internal error'
-        })
-        return
+        return next(CrawlerInternalError())
       }
 
       // see if completely or partially scraped
-      if (requestedPages.length !== scrapedPages.length) {
-        res.status(206)
-      } else {
+      if (requestedPages.length === scrapedPages.length) {
         res.status(200)
+      } else {
+        res.status(206)
       }
 
-      res.json({
+      return res.json({
         scrapedPages,
         items
       })
-    } catch (error) {
-      log.error('ScrapPages', error + '')
-      res.status(500).json({
-        error: 'Crawler internal error'
-      })
+    } finally {
+      RequestDone()
     }
   }
 )

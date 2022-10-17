@@ -1,11 +1,11 @@
-FROM node:18-alpine3.15 AS builder
+FROM node:16-alpine3.15 AS builder
 WORKDIR /app
 COPY ./package*.json .
 RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:18-alpine3.15
+FROM node:16-alpine3.15
 WORKDIR /app
 
 # Installs latest Chromium (100) package.
@@ -26,6 +26,12 @@ COPY --from=builder /app/build ./build
 COPY ./package*.json .
 RUN npm ci --only=production
 
-HEALTHCHECK --interval=45s --timeout=15s --start-period=5s --retries=5 CMD wget --no-verbose --tries=3 --spider localhost:20000/ || exit 1
+# install curl, tor, privoxy
+RUN apk update && apk upgrade && apk add curl tor privoxy
 
-CMD ["node", "/app/build/index.js"]
+COPY ./entrypoint.sh .
+RUN chmod u+x ./entrypoint.sh
+
+ENTRYPOINT [ "./entrypoint.sh" ]
+
+HEALTHCHECK --interval=15s --timeout=30s --start-period=60s --retries=5 CMD wget --no-verbose --tries=3 --spider localhost:20000/ || exit 1

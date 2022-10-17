@@ -27,7 +27,7 @@ export const log = {
    * @param error Error message
    */
   error(invoker: string, error: string): void {
-    process.stdout.write(
+    process.stderr.write(
       new Date().toISOString() +
         ' ' +
         `[${yellowBright('ERROR')}] ${yellowBright(invoker)}` +

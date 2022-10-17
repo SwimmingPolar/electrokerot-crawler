@@ -1,33 +1,28 @@
-import express, { Request, Response } from 'express'
-import fetch from 'node-fetch'
 import HttpsProxyAgent from 'https-proxy-agent'
+import fetch from 'node-fetch'
 import { log } from '../utils'
+import { CrawlerInternalError } from '../helper'
 
-const PORT = Math.floor(Math.random() * 10000) + 10000
+type ProxyStatus = 'Healthy' | 'Unhealthy'
 
-;(async () => {
-  const app = express()
-
-  app.get('/proxyStatus', (req: Request, res: Response) => {
-    res.status(200).send()
-  })
-
-  app.all('*', (req: Request, res: Response) => {
-    res.status(403).send(`Forbidden: ${req.method} ${req.url}`)
-  })
-
-  app.listen(PORT)
-})()
-
-export async function checkProxyStatus() {
+export async function proxyHealthCheck({
+  exitOnError
+}: { exitOnError?: boolean } = {}): Promise<ProxyStatus> {
   try {
-    // proxy connection to tor will fail if tor is not running
-    // and will throw error which is going to result in process exit
-    await fetch(`http://127.0.0.1:${PORT}/proxyStatus`, {
-      agent: HttpsProxyAgent(process.env.HTTP_PROXY || '')
+    const response = await fetch('https://www.danawa.com', {
+      agent: HttpsProxyAgent('http://localhost:8118')
     })
+
+    if (!response.ok) {
+      throw CrawlerInternalError()
+    }
+
+    return 'Healthy'
   } catch (error) {
-    log.error('ProxyStatus', 'Proxy is down')
-    process.exit(1)
+    log.error('ProxyStatus', 'Proxy is not usable')
+    if (exitOnError) {
+      process.exit(1)
+    }
+    return 'Unhealthy'
   }
 }

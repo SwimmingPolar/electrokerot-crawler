@@ -1,16 +1,20 @@
-import { Request, Response, NextFunction } from 'express'
+import { NextFunction, Request, Response } from 'express'
+import { syncSleep } from '../../utils'
 
 const LIMIT = 7
 let currentRequest = 0
 
+let requestLock = 'unlocked'
+export const RequestLock = () => (requestLock = 'locked')
+
 const RequestTaken = () => currentRequest++
-// every 'next' middleware should call this function to indicate that request is done
 export const RequestDone = () => currentRequest--
+export const CurrentRequest = () => currentRequest
 
 const requestLimiter = (req: Request, res: Response, next: NextFunction) => {
   // if limit is reached,
   // send 503 and do not proceed
-  if (currentRequest >= LIMIT) {
+  if (requestLock === 'locked' || currentRequest >= LIMIT) {
     res.status(503).json({
       isBusy: true
     })
@@ -19,8 +23,8 @@ const requestLimiter = (req: Request, res: Response, next: NextFunction) => {
   // indicates that request is taken and will be processed
   RequestTaken()
 
-  // release limit after request is done
-  res.once('finish', RequestDone)
+  // throttle synchronously per valid request
+  syncSleep(1000 + Math.random() * 500)
 
   next()
 }

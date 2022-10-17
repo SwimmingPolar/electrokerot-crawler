@@ -1,5 +1,6 @@
-import { Request, Response, Router } from 'express'
-import { log } from '../../utils'
+import { NextFunction, Request, Response, Router } from 'express'
+import { CrawlerInternalError } from '../../helper'
+import { RequestDone } from '../../middlewares/requestLimiter'
 import requestScrapItem from './scrapItem.helper'
 
 type Empty = Record<string, never>
@@ -14,18 +15,19 @@ router.post(
   '/',
   async (
     req: Request<Empty, Empty, ScrapItemRequestBody, Empty>,
-    res: Response
+    res: Response,
+    next: NextFunction
   ) => {
     const { url } = req.body
 
     try {
       const scrapedResult = await requestScrapItem(url)
-      res.status(200).json(scrapedResult)
+      return res.status(200).json(scrapedResult)
     } catch (error) {
-      log.error('ScrapItem', error + '')
-      res.status(500).json({
-        error: 'Crawler internal error'
-      })
+      // any error caught here have something to do with puppeteer or network (proxy)
+      next(CrawlerInternalError())
+    } finally {
+      RequestDone()
     }
   }
 )

@@ -1,32 +1,21 @@
-import { Browser } from 'puppeteer'
-import puppeteer from 'puppeteer-extra'
-import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker'
-import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+import puppeteer, { Browser } from 'puppeteer'
 import { log, randomUA } from '../utils'
 
 let browser: Browser
 
-puppeteer.use(AdblockerPlugin({ blockTrackers: true })).use(StealthPlugin())
-
 export async function initiateBrowser() {
-  const isProduction = process.env.NODE_ENV === 'production'
-  const proxy = process.env.HTTP_PROXY
+  const isProduction = process.env.NODE_ENV?.trim() === 'production'
   const args = ['--disable-dev-shm-usage', '--no-sandbox']
-  if (isProduction && proxy) {
-    args.push(`--proxy-server=${proxy}`)
+  if (isProduction) {
+    args.push(`--proxy-server=http://localhost:8118`)
   }
   try {
     browser = await puppeteer.launch({
       defaultViewport: null,
       executablePath: isProduction
-        ? process.env.PUPPETEER_EXECUTABLE_PATH
+        ? process.env.PUPPETEER_EXECUTABLE_PATH?.trim()
         : puppeteer.executablePath(),
-      args,
-      ignoreDefaultArgs: [
-        '--enable-automation',
-        '--disable-extensions',
-        '--disable-gpu'
-      ]
+      args
     })
 
     // re-open browser in case it crashes

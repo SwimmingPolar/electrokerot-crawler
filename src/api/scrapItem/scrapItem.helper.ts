@@ -1,4 +1,5 @@
 import { getPage } from '../../helper'
+import { retry } from '../../utils'
 
 interface ScrapItemResult {
   name: string
@@ -26,33 +27,54 @@ interface ScrapItemResult {
   >
 }
 
+const TIMEOUT = 120000
+
 export default async function (url: string): Promise<ScrapItemResult> {
   /**
    * GET new page
    */
   const page = await getPage()
 
+  // do not track header
+  page.setExtraHTTPHeaders({
+    DNT: '1'
+  })
+
+  // block images
+  page.setRequestInterception(true)
+  page.on('request', request => {
+    if (request.resourceType() === 'image') {
+      request.abort()
+    } else {
+      request.continue()
+    }
+  })
+
   try {
     /**
      * GOTO the target page
      */
-    await page.goto(url, {
-      waitUntil: 'domcontentloaded',
-      timeout: 100000
-    })
+    const goto = async () => {
+      await page.goto(url, {
+        waitUntil: 'domcontentloaded',
+        timeout: TIMEOUT
+      })
+    }
+    await retry(goto, 3)()
 
     // wait for necessary elements to be loaded
     await Promise.all([
       page.waitForSelector("div[id='2DepthCategory'] .now a", {
-        timeout: 100000
+        timeout: TIMEOUT
       }),
       page.waitForSelector(
         '#priceCompareArea div.diff_opt_area .cardSaleChkbox span a',
         {
-          timeout: 100000
+          timeout: TIMEOUT
         }
       )
     ])
+
     // apply credit card discount
     await page.click(
       '#priceCompareArea div.diff_opt_area .cardSaleChkbox span a'
@@ -71,19 +93,22 @@ export default async function (url: string): Promise<ScrapItemResult> {
         return false
       },
       {
-        timeout: 100000
+        timeout: TIMEOUT
       }
     )
 
     // go to details section
     await page.waitForSelector('#bookmark_product_information_item > a', {
-      timeout: 100000
+      timeout: TIMEOUT
     })
     await page.click('#bookmark_product_information_item > a')
     // wait for details section to load
     await page.waitForSelector('#productDescriptionArea tbody', {
-      timeout: 100000
+      timeout: TIMEOUT
     })
+
+    // wait for data to be loaded
+    await page.waitForTimeout(2500)
 
     const result = await page.evaluate(
       (url, categories) => {
@@ -323,9 +348,6 @@ export default async function (url: string): Promise<ScrapItemResult> {
       url,
       categories
     )
-
-    // scraping delay
-    await page.waitForTimeout(6000)
 
     return result
   } finally {
